@@ -3,8 +3,11 @@ services:
     image: ghcr.io/cheshire-cat-ai/core:latest
     container_name: cheshire_cat_core
     depends_on:
-      - cheshire-cat-vector-memory
-      - ollama
+      ollama:
+        condition: service_healthy
+      cheshire-cat-vector-memory:
+        condition: service_started
+    entrypoint: ["/init-cheshire-cat-core.sh"]
     environment:
       PYTHONUNBUFFERED: "1"
       WATCHFILES_FORCE_POLLING: "true"
@@ -27,6 +30,8 @@ services:
       - ./cat/static:/app/cat/static
       - ./cat/plugins:/app/cat/plugins
       - ./cat/data:/app/cat/data
+      - ./init-cheshire-cat-core.sh:/init-cheshire-cat-core.sh
+      - ./my_plugin:/my_plugin
     restart: always
 
   cheshire-cat-vector-memory:
@@ -44,6 +49,7 @@ services:
     image: ollama/ollama:latest
     container_name: ollama_cat
     restart: always
+    entrypoint: ["/init-ollama.sh"]
     environment:
       OLLAMA_HOST: "${OLLAMA_HOST:-0.0.0.0}:${OLLAMA_PORT-11434}"
       OLLAMA_DEBUG: ${OLLAMA_DEBUG:-false}
@@ -55,6 +61,12 @@ services:
       - ${OLLAMA_PORT:-11434}
     volumes:
       - ./ollama:/root/.ollama
+      - ./init-ollama.sh:/init-ollama.sh
+    healthcheck:
+      test: ["CMD", "test", "-f", "/tmp/model_ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 50
     # deploy:
     #   resources:
     #     reservations:
