@@ -7,7 +7,6 @@ services:
         condition: service_healthy
       cheshire-cat-vector-memory:
         condition: service_started
-    # entrypoint: ["/init-cheshire-cat-core.sh"]
     environment:
       PYTHONUNBUFFERED: "1"
       WATCHFILES_FORCE_POLLING: "true"
@@ -72,4 +71,23 @@ services:
     #     reservations:
     #       devices:
             #use only cpu without nvidia gpu
-            
+  home-assistant:
+    image: homeassistant/home-assistant:latest
+    container_name: home-assistant
+    restart: always
+    volumes:
+      - ./home-assistant:/config
+    expose:
+      - ${HOME_ASSISTANT_PORT:-8123}
+    ports:
+      - "${HOME_ASSISTANT_PORT:-8123}:8123"
+    environment:
+      - TZ=Rome/Europe
+    depends_on:
+      - cheshire-cat-core
+      - cheshire-cat-vector-memory
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8123"]
+      interval: 30s
+      timeout: 10s
+      retries: 5

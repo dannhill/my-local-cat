@@ -8,4 +8,4 @@ if not os.path.exists('./cat'):
     shutil.copytree('./default_cat', './cat')
 
 #execute the command "docker compose up -d" in the current directory
-subprocess.run(['docker-compose', 'up', '-d'], check=True)
+subprocess.run(['docker','compose', 'up', '-d'], check=True)
