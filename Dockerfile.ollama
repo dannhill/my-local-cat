@@ -1,0 +1,56 @@
+FROM ollama/ollama:latest
+
+WORKDIR /app
+
+# Crea lo script entrypoint riga per riga
+RUN echo '#!/bin/bash' > entrypoint.sh
+RUN echo 'set -e' >> entrypoint.sh
+RUN echo '' >> entrypoint.sh
+RUN echo '# Start Ollama in background' >> entrypoint.sh
+RUN echo 'ollama serve &' >> entrypoint.sh
+RUN echo 'OLLAMA_PID=$!' >> entrypoint.sh
+RUN echo '' >> entrypoint.sh
+RUN echo '# Wait for Ollama service to be ready' >> entrypoint.sh
+RUN echo 'echo "Attendendo che il servizio Ollama sia pronto..."' >> entrypoint.sh
+RUN echo 'MAX_RETRY=30' >> entrypoint.sh
+RUN echo 'count=0' >> entrypoint.sh
+RUN echo 'while [ $count -lt $MAX_RETRY ]; do' >> entrypoint.sh
+RUN echo '  if timeout 1 bash -c "echo > /dev/tcp/localhost/11434" 2>/dev/null; then' >> entrypoint.sh
+RUN echo '    echo "Servizio Ollama pronto all'\''uso!"' >> entrypoint.sh
+RUN echo '    break' >> entrypoint.sh
+RUN echo '  fi' >> entrypoint.sh
+RUN echo '  echo "Tentativo $((count+1))/$MAX_RETRY: Ollama non ancora pronto..."' >> entrypoint.sh
+RUN echo '  sleep 2' >> entrypoint.sh
+RUN echo '  count=$((count+1))' >> entrypoint.sh
+RUN echo 'done' >> entrypoint.sh
+RUN echo '' >> entrypoint.sh
+RUN echo 'if [ $count -eq $MAX_RETRY ]; then' >> entrypoint.sh
+RUN echo '  echo "Impossibile connettersi a Ollama dopo $MAX_RETRY tentativi."' >> entrypoint.sh
+RUN echo '  exit 1' >> entrypoint.sh
+RUN echo 'fi' >> entrypoint.sh
+RUN echo '' >> entrypoint.sh
+RUN echo '# Crea SUBITO il file per segnalare che il SERVIZIO è pronto' >> entrypoint.sh
+RUN echo 'echo "Servizio Ollama avviato. Creo /tmp/model_ready..."' >> entrypoint.sh
+RUN echo 'touch /tmp/model_ready' >> entrypoint.sh
+RUN echo '' >> entrypoint.sh
+RUN echo '# Ora scarica il modello. Questo può richiedere tempo, ma il container è già "healthy".' >> entrypoint.sh
+RUN echo 'echo "Scaricando il modello gemma3:1b (in background rispetto all'\''health check)..."' >> entrypoint.sh
+RUN echo 'ollama pull gemma3:1b' >> entrypoint.sh
+RUN echo '' >> entrypoint.sh
+RUN echo 'echo "Download del modello completato (o già presente)."' >> entrypoint.sh
+RUN echo '' >> entrypoint.sh
+RUN echo '# Mantieni il processo Ollama in esecuzione in primo piano' >> entrypoint.sh
+RUN echo 'wait $OLLAMA_PID' >> entrypoint.sh
+
+# Rende eseguibile lo script
+RUN chmod +x /app/entrypoint.sh
+
+# Esponi la porta dell'API di Ollama
+EXPOSE 11434
+
+# Healthcheck: il container è healthy se il file /tmp/model_ready esiste
+HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=3 \
+  CMD test -f /tmp/model_ready || exit 1
+
+#entrypoint
+ENTRYPOINT ["/app/entrypoint.sh"]

@@ -29,8 +29,6 @@ services:
       - ./cat/static:/app/cat/static
       - ./cat/plugins:/app/cat/plugins
       - ./cat/data:/app/cat/data
-      - ./init-cheshire-cat-core.sh:/init-cheshire-cat-core.sh
-      - ./my_plugin:/my_plugin
     restart: always
 
   cheshire-cat-vector-memory:
@@ -42,13 +40,20 @@ services:
       - ${QDRANT_PORT:-6333}
     volumes:
       - ./cat/long_term_memory/vector:/qdrant/storage
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--spider", "http://localhost:6333/health"]
+      interval: 10s
+      timeout: 15s
+      retries: 10
+      start_period: 20s
     restart: always
 
   ollama:
-    image: ollama/ollama:latest
+    build: 
+      context: .
+      dockerfile: Dockerfile.ollama
     container_name: ollama_cat
     restart: always
-    entrypoint: ["/init-ollama.sh"]
     environment:
       OLLAMA_HOST: "${OLLAMA_HOST:-0.0.0.0}:${OLLAMA_PORT-11434}"
       OLLAMA_DEBUG: ${OLLAMA_DEBUG:-false}
@@ -60,7 +65,6 @@ services:
       - ${OLLAMA_PORT:-11434}
     volumes:
       - ./ollama:/root/.ollama
-      - ./init-ollama.sh:/init-ollama.sh
     healthcheck:
       test: ["CMD", "test", "-f", "/tmp/model_ready"]
       interval: 10s
@@ -80,7 +84,7 @@ services:
     expose:
       - ${HOME_ASSISTANT_PORT:-8123}
     ports:
-      - "${HOME_ASSISTANT_PORT:-8123}:8123"
+      - "0.0.0.0:${HOME_ASSISTANT_PORT:-8123}:8123"
     environment:
       - TZ=Rome/Europe
     depends_on:
