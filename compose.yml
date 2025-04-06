@@ -20,7 +20,7 @@ services:
       DEBUG: ${DEBUG:-false}
       SAVE_MEMORY_SNAPSHOTS: ${SAVE_MEMORY_SNAPSHOTS:-false}
     ports:
-      - "${CORE_PORT:-1865}:80"
+      - "0.0.0.0:${CORE_PORT:-1865}:80"
     # This add an entry to /etc/hosts file in the container mapping host.docker.internal to the host machine IP addr, allowing the container to access services running on the host, not only on Win and Mac but also Linux. 
     # See https://docs.docker.com/desktop/networking/#i-want-to-connect-from-a-container-to-a-service-on-the-host and https://docs.docker.com/reference/cli/docker/container/run/#add-host
     extra_hosts:
@@ -90,8 +90,18 @@ services:
     depends_on:
       - cheshire-cat-core
       - cheshire-cat-vector-memory
+      - wyoming-whisper
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8123"]
       interval: 30s
       timeout: 10s
       retries: 5
+  wyoming-whisper:
+    image: rhasspy/wyoming-whisper
+    ports:
+      - "${WHISPER_HOST_PORT:-10300}:10300"
+    volumes:
+      - /whisper/data:/data
+    command: ["--model", "tiny-int8", "--language", "it"]
+    tty: true
+    stdin_open: true

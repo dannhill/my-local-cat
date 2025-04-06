@@ -9,3 +9,4 @@ __pycache__/
 /home-assistant/*
 .env
 concat_files.py
+wyoming-addons

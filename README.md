@@ -1,3 +1,5 @@
+Note: needs wyoming-addons repo to be cloned in the current directory: https://github.com/rhasspy/wyoming-addons.git
+
 # local-cat 😸🏠
 
 **local-cat** provides a completely local setup for CheshireCat. Local-cat leverages Local runners + Qdrant to run your preferred LLM, Embedder and VectorDB locally.
