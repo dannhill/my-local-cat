@@ -75,6 +75,7 @@ services:
     #     reservations:
     #       devices:
             #use only cpu without nvidia gpu
+  
   home-assistant:
     image: homeassistant/home-assistant:latest
     container_name: home-assistant
@@ -91,6 +92,7 @@ services:
       - cheshire-cat-core
       - cheshire-cat-vector-memory
       - wyoming-whisper
+      - wyoming-piper
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8123"]
       interval: 30s
@@ -98,6 +100,8 @@ services:
       retries: 5
   wyoming-whisper:
     image: rhasspy/wyoming-whisper
+    container_name: wyoming-whisper
+    restart: always
     ports:
       - "${WHISPER_HOST_PORT:-10300}:10300"
     volumes:
@@ -105,3 +109,18 @@ services:
     command: ["--model", "tiny-int8", "--language", "it"]
     tty: true
     stdin_open: true
+
+  wyoming-piper:
+    image: rhasspy/wyoming-piper
+    container_name: wyoming-piper  # Nome del container suggerito
+    restart: always              # Aggiunto per coerenza con gli altri servizi
+    ports:
+      - "${PIPER_HOST_PORT:-10200}:10200" # Usa una variabile d'ambiente per la porta host, come per whisper
+    volumes:
+      - ./piper-data:/data       # Sostituito il percorso assoluto con uno relativo per portabilità
+                                 # Assicurati di creare la cartella 'piper-data' nella stessa directory del tuo file docker-compose.yml
+                                 # o cambia './piper-data' con il percorso desiderato sul tuo host.
+    #load a local model in ./data called it_IT-paola-medium
+    command: ["--voice", "en_US-"] # Specifica il modello da caricare
+    tty: true                    # Corrisponde a -t
+    stdin_open: true             # Corrisponde a -i
