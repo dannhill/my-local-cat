@@ -98,6 +98,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    devices:
+      - /dev/ttyUSB0:/dev/ttyUSB0
   wyoming-whisper:
     image: rhasspy/wyoming-whisper
     container_name: wyoming-whisper
@@ -106,7 +108,7 @@ services:
       - "${WHISPER_HOST_PORT:-10300}:10300"
     volumes:
       - /whisper/data:/data
-    command: ["--model", "tiny-int8", "--language", "it"]
+    command: ["--model", "base-int8", "--language", "it"]
     tty: true
     stdin_open: true
 
@@ -121,6 +123,6 @@ services:
                                  # Assicurati di creare la cartella 'piper-data' nella stessa directory del tuo file docker-compose.yml
                                  # o cambia './piper-data' con il percorso desiderato sul tuo host.
     #load a local model in ./data called it_IT-paola-medium
-    command: ["--voice", "en_US-"] # Specifica il modello da caricare
+    command: ["--voice", "en_US-lessac-medium"] # Specifica il modello da caricare
     tty: true                    # Corrisponde a -t
     stdin_open: true             # Corrisponde a -i

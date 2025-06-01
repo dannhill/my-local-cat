@@ -34,8 +34,8 @@ RUN echo 'echo "Servizio Ollama avviato. Creo /tmp/model_ready..."' >> entrypoin
 RUN echo 'touch /tmp/model_ready' >> entrypoint.sh
 RUN echo '' >> entrypoint.sh
 RUN echo '# Ora scarica il modello. Questo può richiedere tempo, ma il container è già "healthy".' >> entrypoint.sh
-RUN echo 'echo "Scaricando il modello gemma3:1b (in background rispetto all'\''health check)..."' >> entrypoint.sh
-RUN echo 'ollama pull gemma3:1b' >> entrypoint.sh
+RUN echo 'echo "Scaricando il modello (in background rispetto all'\''health check)..."' >> entrypoint.sh
+RUN echo 'ollama pull llama3.2:1b' >> entrypoint.sh
 RUN echo '' >> entrypoint.sh
 RUN echo 'echo "Download del modello completato (o già presente)."' >> entrypoint.sh
 RUN echo '' >> entrypoint.sh
